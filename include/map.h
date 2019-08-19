@@ -15,7 +15,7 @@ typedef struct Node{
 
 } node_t;
 
-//node_t * node_init(void * key, void * value,node_t *next);
+node_t * node_init(void * key, void * value,node_t *next);
 void node_free(node_t * arg);
 
 

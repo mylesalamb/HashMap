@@ -2,8 +2,6 @@
 #include<stdlib.h>
 #include <stdio.h>
 
-
-
 /*
 Allocates a new node for the hash map
 
@@ -155,12 +153,27 @@ int hashmap_remove(hashmap_t * map, void * key){
 		cursor = cursor->next;
 	}
 
-
-
-
 	//didnt find node so failure
 	return 0;
 
+}
+
+
+void hashmap_free(hashmap_t * arg){
+
+	//free arg->table
+	for(size_t i = 0; i < arg->tableSize;i++){
+		node_t * cursor = (arg->table)[i];
+
+		//free individual bucket/chain
+		while(cursor!=NULL){
+			node_t * next = cursor->next;
+			node_free(cursor);
+			cursor = next;
+		}
+	}
+	free(arg->table);
+	free(arg);
 }
 
 
@@ -174,10 +187,11 @@ void hashmap_print(hashmap_t * arg){
 	for(size_t i = 0; i < arg->tableSize; i++){
 
 		node_t * cursor = (arg->table)[i];
-
+		printf("Now printing bucket: %d\n",i );
 		while(cursor != NULL){
-			printf("(%p,%p)\n", cursor->key,cursor->value);
+			printf("(%p,%p)\t", cursor->key,cursor->value);
 			cursor = cursor->next;
 		}
+		printf("\n");
 	}
 }
