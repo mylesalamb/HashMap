@@ -1,10 +1,17 @@
 #include"map.h"
 #include<stdlib.h>
+#include <stdio.h>
 
 
 
 /*
 Allocates a new node for the hash map
+
+Key: the key to be associated with the value
+Value: the value to be returned when the key is passed into get
+
+returns: a pointer to the new node
+
 */
 node_t * node_init(void * key, void * value,node_t * next){
 
@@ -17,8 +24,26 @@ node_t * node_init(void * key, void * value,node_t * next){
 }
 
 /*
+frees a node and its associated members
+
+arg: the node and its members to free
+*/
+void node_free(node_t * arg){
+
+	free(arg->key);
+	free(arg->value);
+	free(arg);
+
+
+}
+
+/*
 init function for the hashmap
 returns null if an invalid table size is given
+
+size: Number of buckets for the hashmap
+hash: the associated hash function to be used
+comp: comparator for key values to test for key equality
 */
 hashmap_t * hashmap_init(
 	int size,
@@ -26,7 +51,7 @@ hashmap_t * hashmap_init(
 	int (*comp)(void*,void*))
 {
 
-	if(size < 0)
+	if(size <= 0)
 		return NULL;
 
 	hashmap_t * table = (hashmap_t *)malloc(sizeof(hashmap_t));
@@ -44,10 +69,13 @@ hashmap_t * hashmap_init(
 
 
 /*
-Adds a key value pait ro the hashmap, returns one on success
+Adds a key value pait to the hashmap, returns one on success
 
+map: the map to add the k/v pair to
+key: the associated key
+value: the value to be associated with the key
 
-
+returns 1 on success, 0 if key is already present
 */
 int hashmap_add(hashmap_t * map, void * key, void * value){
 
@@ -55,15 +83,11 @@ int hashmap_add(hashmap_t * map, void * key, void * value){
 	//calculate hash and fit to table
 	int hash = (map->hashfunc)(key)%(map->tableSize);
 
-	
-	//node_t * chain = (*(map->table))[hash];
-
-
 	//catch if there are no nodes in the chain
 	if(((map->table))[hash] == NULL){
 		((map->table))[hash] = node_init(key,value,NULL);
 		return 1;
-	}
+	}	
 
 	node_t * cursor = ((map->table))[hash];
 
@@ -72,12 +96,88 @@ int hashmap_add(hashmap_t * map, void * key, void * value){
 		if((map->comparator)(cursor->key,key)==0)
 			return 0;
 
-
+		cursor = cursor->next;
 
 	}while(cursor->next != NULL);
 
+	cursor->next = node_init(key,value,NULL);
+}
 
+
+void * hashmap_get(hashmap_t * map, void * key){
+	int hash = (map->hashfunc)(key)%(map->tableSize);
+	node_t * cursor = (map->table)[hash];
+
+	while(cursor != NULL){
+		if((map->comparator)(cursor->key,key)==0)
+			return cursor->key;
+
+		cursor = cursor->next;
+	}
+
+	return NULL;
+
+
+}
+
+
+int hashmap_remove(hashmap_t * map, void * key){
+	int hash = (map->hashfunc)(key)%(map->tableSize);
 	
+	node_t * cursor = (map->table)[hash];
+
+	//if there are no entries in the bucket
+	if(cursor == NULL)
+		return 0;
 
 
+	//if it is the first and only entry
+	if((map->comparator)(key,cursor->key) == 0 && cursor->next == NULL){
+		(map->table)[hash] = NULL;
+		node_free(cursor);
+		return 1;
+	}
+
+
+	//check the chain to find the entry
+	node_t * trail = cursor;
+	cursor = cursor->next;
+
+	//find and remove entry if it exists
+	while(cursor != NULL){
+		if((map->comparator)(key,cursor->key) == 0){
+			trail->next = cursor->next;
+			node_free(cursor);
+			return 1;
+		}
+
+		trail = cursor;
+		cursor = cursor->next;
+	}
+
+
+
+
+	//didnt find node so failure
+	return 0;
+
+}
+
+
+
+
+/*
+Prints a hashmap to stdouts
+*/
+void hashmap_print(hashmap_t * arg){
+
+	for(size_t i = 0; i < arg->tableSize; i++){
+
+		node_t * cursor = (arg->table)[i];
+
+		while(cursor != NULL){
+			printf("(%p,%p)\n", cursor->key,cursor->value);
+			cursor = cursor->next;
+		}
+	}
 }

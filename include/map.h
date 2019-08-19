@@ -15,8 +15,8 @@ typedef struct Node{
 
 } node_t;
 
-node_t * node_init(void * key, void * value,node_t *next);
-
+//node_t * node_init(void * key, void * value,node_t *next);
+void node_free(node_t * arg);
 
 
 
@@ -32,6 +32,7 @@ typedef struct HashMap
 }hashmap_t;
 
 hashmap_t * hashmap_init(int size,int(*hash)(void *),int (*comp)(void*,void*));
+void * hashmap_get(hashmap_t * map, void * key);
 int hashmap_add(hashmap_t * map, void * key, void * value);
 int hashmap_remove(hashmap_t * map, void * key);
 void hashmap_free(hashmap_t * map);
